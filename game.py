@@ -4,6 +4,7 @@ import os
 pygame.font.init()
 
 WIDTH,HEIGHT=900,500
+CENTER_X, CENTER_Y=450,250
 screen=pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("space invaders!")
 
@@ -83,4 +84,69 @@ RED_HIT=pygame.USEREVENT+2
 def handle_bullets(yellow_bullets, red_bullets, yellow, red):
     for bullet in yellow_bullets:
         bullet.x+=VEL
+        if red.colliderect(bullet):
+            pygame.event.post(pygame.event.Event(RED_HIT))
+            yellow_bullets.remove(bullet)
+        elif bullet.x>WIDTH:
+            yellow_bullets.remove(bullet)
+
+    for bullet in red_bullets:
+        bullet.x-=VEL
+        if yellow.colliderect(bullet):
+            pygame.event.post(pygame.event.Event(YELLOW_HIT))
+            red_bullets.remove(bullet)
+        elif bullet.x<0:
+            red_bullets.remove(bullet)
+
+def draw_winner(text):
+    winner_text=WINNER_FONT.render(text, 1, "white") 
+    screen.blit(winner_text, (CENTER_X-winner_text.get_width()/2, CENTER_Y-winner_text.get_height()/2))
+    pygame.display.update()
+    pygame.time.delay(5000)
+
+def main_game():
+    red=pygame.Rect(700,300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+    yellow=pygame.Rect(700,300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
+
+    red_bullets=[]
+    yellow_bullets=[]
+
+    red_lives=0
+    yellow_lives=0
+
+    clock=pygame.time.Clock()
+
+    run=True
+    while run:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                run=False
+                pygame.quit()
+                exit()
+
+            if event.type==pygame.KEYDOWN:
+                if event.key==pygame.K_LCTRL and len(yellow_bullets)<MAX_BULLETS:
+                    bullet=pygame.Rect(yellow.x+yellow.width, yellow.y+yellow.height//2-2, 10,5)
+                    yellow_bullets.append(bullet)
+                
+                if event.key==pygame.K_RCTRL and len(red_bullets)<MAX_BULLETS:
+                    bullet=pygame.Rect(red.x, red.y+red.height//2-2, 10,5)
+                    red_bullets.append(bullet)
+
+            if event.type==RED_HIT:
+                red_lives-=1
+            
+            if event.type==YELLOW_HIT:
+                yellow_lives-=1
+
+        winner_text=""
+
+        if red_lives<=0:
+            winner_text="Yellow Spaceship Wins!!"
+
+        if yellow_lives<0:
+            winner_text="Red Spaceship Wins!!"
+
         
